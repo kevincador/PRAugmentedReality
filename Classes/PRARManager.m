@@ -38,6 +38,8 @@
 #import "ARController.h"
 #import "ARSettings.h"
 
+static NSString *const PRARMANAGER_ERROR_DOMAIN = @"PRARMANAGER_ERROR_DOMAIN";
+
 @interface PRARManager()
 
 @property (nonatomic) AVCaptureSession *cameraSession;
@@ -86,13 +88,34 @@
 			if ([self.cameraSession canAddInput:videoIn]) {
                 [self.cameraSession addInput:videoIn];
             } else {
-                NSLog(@"Couldn't add video input");
+                NSDictionary *userInfo = @{
+                                           NSLocalizedDescriptionKey: @"Couldn't add video input",
+                                           NSLocalizedFailureReasonErrorKey: @"Couldn't add video input"
+                                           };
+                NSError *error = [NSError errorWithDomain:PRARMANAGER_ERROR_DOMAIN
+                                                     code:400
+                                                 userInfo:userInfo];
+                [self.delegate augmentedRealityManager:self didReportError:error];
             }
 		} else {
-            NSLog(@"Couldn't create video input");
+            NSDictionary *userInfo = @{
+                                       NSLocalizedDescriptionKey: @"Couldn't create video input",
+                                       NSLocalizedFailureReasonErrorKey: @"Couldn't add video input"
+                                       };
+            NSError *error = [NSError errorWithDomain:PRARMANAGER_ERROR_DOMAIN
+                                                 code:400
+                                             userInfo:userInfo];
+            [self.delegate augmentedRealityManager:self didReportError:error];
         }
 	} else {
-        NSLog(@"Couldn't create video capture device");
+        NSDictionary *userInfo = @{
+                                   NSLocalizedDescriptionKey: @"Couldn't create video capture device",
+                                   NSLocalizedFailureReasonErrorKey: @"Couldn't create video capture device"
+                                   };
+        NSError *error = [NSError errorWithDomain:PRARMANAGER_ERROR_DOMAIN
+                                             code:400
+                                         userInfo:userInfo];
+        [self.delegate augmentedRealityManager:self didReportError:error];
     }
     
     self.cameraLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.cameraSession];
@@ -153,7 +176,7 @@
                                    NSLocalizedFailureReasonErrorKey: @"No data to display in reality",
                                    NSLocalizedRecoverySuggestionErrorKey: @"have you set your data up?"
                                    };
-        NSError *error = [NSError errorWithDomain:nil
+        NSError *error = [NSError errorWithDomain:PRARMANAGER_ERROR_DOMAIN
                                              code:400
                                          userInfo:userInfo];
         [self.delegate augmentedRealityManager:self didReportError:error];
