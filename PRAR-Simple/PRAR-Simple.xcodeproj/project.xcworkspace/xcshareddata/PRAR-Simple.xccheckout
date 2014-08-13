@@ -10,29 +10,29 @@
 	<string>PRAR-Simple</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>E19429A1-6583-4267-B86F-61148BA2BCA3</key>
+		<key>77EA23C48E85153A68DBE1D19F95716E3A29402E</key>
 		<string>https://github.com/Balillas/PRAugmentedReality.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>PRAR-Simple/PRAR-Simple.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>E19429A1-6583-4267-B86F-61148BA2BCA3</key>
+		<key>77EA23C48E85153A68DBE1D19F95716E3A29402E</key>
 		<string>../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://github.com/Balillas/PRAugmentedReality.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>E19429A1-6583-4267-B86F-61148BA2BCA3</string>
+	<string>77EA23C48E85153A68DBE1D19F95716E3A29402E</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>E19429A1-6583-4267-B86F-61148BA2BCA3</string>
+			<string>77EA23C48E85153A68DBE1D19F95716E3A29402E</string>
 			<key>IDESourceControlWCCName</key>
 			<string>PRAugmentedReality</string>
 		</dict>

@@ -25,59 +25,38 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <AVFoundation/AVFoundation.h>
+#import <CoreLocation/CoreLocation.h>
 
-#import "ARRadar.h"
-#import "ARController.h"
-#import "ARSettings.h"
+@class ARRadar;
+@class ARController;
+@class AVCaptureVideoPreviewLayer;
 
-/**
- * Those protocols are used by the AR View
- * arControllerUpdateFrame  - Updates the position of the AR Views Containers
- * arControllerDidSetupAR   - Receives the AR data once it is set up or updated
- * gotProblem               - Generic error protocol
- */
-@class PRARManager;
 
-@protocol PRARManagerDelegate
+@protocol PRARManagerDelegate;
 
-@optional
-
-- (void)prarUpdateFrame:(CGRect)arViewFrame;
-
-- (void)prarDidSetupAR:(UIView *)arView
-               withCameraLayer:(AVCaptureVideoPreviewLayer*)cameraLayer;
-
-- (void)prarDidSetupAR:(UIView *)arView
-               withCameraLayer:(AVCaptureVideoPreviewLayer*)cameraLayer
-                  andRadarView:(UIView*)radar;
-
-- (void)prarGotProblem:(NSString*)problemTitle withDetails:(NSString*)problemDetails;
-
-@end
 
 @interface PRARManager : NSObject
-{
-    // -- Camera -- //
-    AVCaptureSession *cameraSession;
-    AVCaptureVideoPreviewLayer *cameraLayer;
-    
-    // -- Radar -- //
-    ARRadar *radar;
-    BOOL radarOption;
-    
-    // -- Other -- //
-    CGSize frameSize;
-    UIView *arOverlaysContainerView;
-    CADisplayLink *refreshTimer;
-}
 
-@property (nonatomic, strong) ARController *arController;
-@property (weak, nonatomic) id <PRARManagerDelegate> delegate;
+@property (nonatomic) AVCaptureVideoPreviewLayer *cameraLayer;
+@property (nonatomic) ARRadar *radarView;
+@property (nonatomic) UIView *arOverlaysContainerView;
 
-- (id)initWithSize:(CGSize)size delegate:(id)delegate showRadar:(BOOL)showRadar;
+@property (weak, nonatomic) id<PRARManagerDelegate> delegate;
+
+- (id)initWithSize:(CGSize)size
+          delegate:(id<PRARManagerDelegate>)delegate
+ shouldCreateRadar:(BOOL)createRadar;
 
 - (void)startARWithData:(NSArray*)arData forLocation:(CLLocationCoordinate2D)location;
 - (void)stopAR;
+
+@end
+
+
+@protocol PRARManagerDelegate <NSObject>
+
+- (void)augmentedRealityManagerDidSetup:(PRARManager*)arManager;
+- (void)augmentedRealityManager:(PRARManager*)arManager didUpdateARFrame:(CGRect)frame;
+- (void)augmentedRealityManager:(PRARManager*)arManager didReportError:(NSError*)error;
 
 @end
