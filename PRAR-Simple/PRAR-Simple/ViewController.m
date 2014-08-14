@@ -111,8 +111,6 @@
     [self.view.layer addSublayer:(CALayer*)arManager.cameraLayer];
     [self.view addSubview:arManager.arOverlaysContainerView];
     
-    [self.view bringSubviewToFront:arManager.arOverlaysContainerView];
-    
     if (arManager.radarView) {
         [self.view addSubview:(UIView*)arManager.radarView];
     }

@@ -14,7 +14,7 @@
 
 @property (nonatomic) CLLocationCoordinate2D coordinates;
 
-@property (nonatomic) int vertice;
+@property (nonatomic) int verticalAlignment;
 
 -(CLLocationDistance)distanceFromLocation:(CLLocationCoordinate2D)coordinate;
 
