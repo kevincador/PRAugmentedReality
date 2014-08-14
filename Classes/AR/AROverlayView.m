@@ -10,7 +10,7 @@
 
 @implementation AROverlayView
 
--(double)distanceFromLocation:(CLLocationCoordinate2D)coordinate {
+-(CLLocationDistance)distanceFromLocation:(CLLocationCoordinate2D)coordinate {
     CLLocation *objectLocation = [[CLLocation alloc] initWithLatitude:self.coordinates.latitude
                                                              longitude:self.coordinates.longitude];
     CLLocation *location = [[CLLocation alloc] initWithLatitude:coordinate.latitude

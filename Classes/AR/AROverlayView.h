@@ -16,6 +16,6 @@
 
 @property (nonatomic) int vertice;
 
--(double)distanceFromLocation:(CLLocationCoordinate2D)coordinate;
+-(CLLocationDistance)distanceFromLocation:(CLLocationCoordinate2D)coordinate;
 
 @end

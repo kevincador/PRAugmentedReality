@@ -45,10 +45,9 @@
 }
 
 -(void)viewDidAppear:(BOOL)animated {
-    // Initialize your current location as 0,0 (since it works with our randomly generated locations)
-    CLLocationCoordinate2D locationCoordinates = CLLocationCoordinate2DMake(0, 0);
+    [super viewDidAppear:animated];
     
-    [self.prARManager startARWithData:[self getDummyData] forLocation:locationCoordinates];
+    [self.prARManager startARWithData:[self getDummyData] forLocation:CLLocationCoordinate2DMake(0, 0)];
 }
 
 
@@ -87,15 +86,12 @@
     AROverlayView *overlay = [[AROverlayView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 100.0f, 100.0f)];
     overlay.backgroundColor = [UIColor blueColor];
     overlay.coordinates = locCoordinates;
-
-    UILabel *label = [[UILabel alloc] initWithFrame:overlay.bounds];
-    label.textAlignment = NSTextAlignmentCenter;
-    label.text = [@(i) stringValue];
-    [overlay addSubview:label];
     
     UIButton *button = [[UIButton alloc] initWithFrame:overlay.bounds];
     [button addTarget:self action:@selector(overlayTouchedUpInside:) forControlEvents:UIControlEventTouchUpInside];
     button.tag = i;
+    button.titleLabel.numberOfLines = 0;
+    [button setTitle:[NSString stringWithFormat:@"%f meters", [overlay distanceFromLocation:CLLocationCoordinate2DMake(0, 0)]] forState:UIControlStateNormal];
     [overlay addSubview:button];
     
     i++;
