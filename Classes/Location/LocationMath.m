@@ -26,6 +26,12 @@
 
 #import "LocationMath.h"
 
+#import "ARSettings.h"
+
+#import <CoreMotion/CoreMotion.h>
+
+#import "AROverlayView.h"
+
 @interface LocationMath ()
 
 @property (nonatomic, strong) CLLocationManager * locationManager;
@@ -118,14 +124,11 @@
     return (int)currentHeading;
 }
 
-- (int)getARObjectXPosition:(ARObject*)arObject
-{
-    CLLocationCoordinate2D coordinates;
-    coordinates.latitude        = [[arObject getARObjectData][@"latitude"] doubleValue];
-    coordinates.longitude       = [[arObject getARObjectData][@"longitude"] doubleValue];
+- (int)getARObjectXPosition:(AROverlayView*)arObject {
+    CLLocationCoordinate2D coordinates = [arObject coordinates];
     
-    double latitudeDistance     = max(coordinates.latitude, location.latitude) - min(coordinates.latitude, location.latitude);
-    double longitudeDistance    = max(coordinates.longitude, location.longitude) - min(coordinates.longitude, location.longitude);
+    double latitudeDistance = max(coordinates.latitude, location.latitude) - min(coordinates.latitude, location.latitude);
+    double longitudeDistance = max(coordinates.longitude, location.longitude) - min(coordinates.longitude, location.longitude);
     
     int x_position = DEGREES(atanf(longitudeDistance/(latitudeDistance*lat_over_lon)));
     

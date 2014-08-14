@@ -25,12 +25,18 @@
 //
 
 #import "ARController.h"
-#import "ARObject.h"
 
 #import <QuartzCore/CALayer.h>
 #import <QuartzCore/CATransform3D.h>
 
 #import "LocationMath.h"
+#import "ARSettings.h"
+
+#import "AROverlayView.h"
+
+@interface ARController ()
+
+@end
 
 @implementation ARController
 
@@ -54,52 +60,18 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 
 #pragma mark - AR builders
 
-- (NSDictionary*)buildAROverlaysForData:(NSArray*)arData andLocation:(CLLocationCoordinate2D)newLocation
-{
-    int x_pos = 0;
-    ARObject *arObject;
+- (NSArray*)radarSpots {
+    NSMutableArray *spots = [NSMutableArray arrayWithCapacity:self.overlayViews.count];
     
-    for (NSDictionary *arObjectData in arData) {
-        NSNumber *ar_id = @([arObjectData[@"id"] intValue]);
-        arObject = [[ARObject alloc] initWithId:ar_id.intValue
-                                           title:arObjectData[@"title"]
-                                     coordinates:CLLocationCoordinate2DMake([arObjectData[@"lat"] doubleValue],
-                                                                            [arObjectData[@"lon"] doubleValue])
-                              andCurrentLocation:newLocation];
-        
-        x_pos = [self.locationMath getARObjectXPosition:arObject]-arObject.view.frame.size.width;
-        
-        geoobjectOverlays[ar_id] = arObject;
-        geoobjectPositions[ar_id] = @(x_pos);
-        geoobjectVerts[ar_id] = @1;
-    }
-    
-    [self setupDataForAR];
-    
-    return geoobjectOverlays;
-}
-
-- (NSArray*)createRadarSpots
-{    
-    NSMutableArray *spots = [NSMutableArray arrayWithCapacity:geoobjectOverlays.count];
-    
-    int x_pos = 0;
-    ARObject *arObject;
-    
-    for (NSNumber *ar_id in geoobjectOverlays.allKeys) {
-        
-        x_pos = [geoobjectPositions[ar_id] intValue];
-        arObject = geoobjectOverlays[ar_id];
-        
-        NSDictionary *spot = [NSDictionary dictionaryWithObjectsAndKeys:
-                              [NSNumber numberWithInt:(int)(x_pos/HORIZ_SENS)],         @"angle",
-                              [NSNumber numberWithFloat:arObject.distance.floatValue],  @"distance",
-                              nil];
+    for (AROverlayView *overlayView in self.overlayViews) {
+        NSDictionary *spot = @{@"angle": @([self.locationMath getARObjectXPosition:overlayView]/HORIZ_SENS),
+                               @"distance": @([overlayView distanceFromLocation:self.userCoordinate])};
         [spots addObject:spot];
     }
-    return [NSArray arrayWithArray:spots];
+    return [spots copy];
 }
-- (void)setupDataForAR
+
+- (void)reloadData
 {
     [self setVerticalPosWithDistance];
     [self checkForVerticalPosClashes];
@@ -109,149 +81,109 @@ CATransform3DMake(CGFloat m11, CGFloat m12, CGFloat m13, CGFloat m14,
 }
 
 // Warps the view into a parrallelogram shape in order to give it a 3D perspective
--(void)warpView:(UIView*)arView atVerticalPosition:(int)verticalPos
+-(void)warpView:(AROverlayView*)arView
 {
-    arView.layer.sublayerTransform = CATransform3DMakePerspective(0, verticalPos*-0.0004);
+    arView.layer.sublayerTransform = CATransform3DMakePerspective(0, arView.vertice*-0.0004);
     
-    float shrinkLevel = powf(0.9, verticalPos-1);
+    float shrinkLevel = powf(0.9, arView.vertice-1);
     arView.transform = CGAffineTransformMakeScale(shrinkLevel, shrinkLevel);
     
 }
--(int)setYPosForView:(UIView*)arView atVerticalPos:(int)verticalPos
+-(int)setYPosForView:(AROverlayView*)arView
 {
-    int pos = Y_CENTER-(int)(arView.frame.size.height*verticalPos);
-    pos -= (powf(verticalPos, 2)*4);
+    int pos = Y_CENTER-(int)(arView.frame.size.height*arView.vertice);
+    pos -= (powf(arView.vertice, 2)*4);
     
     return pos-(arView.frame.size.height/2);
 }
 
--(void)setVerticalPosWithDistance
-{
-    ARObject *arObject;
-    int distance;
-    
-    for (NSString *key in geoobjectOverlays.allKeys) {
+-(void)setVerticalPosWithDistance {
+    for (AROverlayView *overlayView in self.overlayViews) {
         
-        arObject = geoobjectOverlays[key];
-        distance = (int)(arObject.distance.doubleValue);
+        double distance = [overlayView distanceFromLocation:self.userCoordinate];
         
         if (distance < 20) {
-            [geoobjectVerts setValue:@0 forKey:key];
-        }
-        else if (distance < 50) {
-            [geoobjectVerts setValue:@1 forKey:key];
-        }
-        else if (distance < 100) {
-            [geoobjectVerts setValue:@2 forKey:key];
-        }
-        else if (distance < 200) {
-            [geoobjectVerts setValue:@3 forKey:key];
-        }
-        else if (distance < 300) {
-            [geoobjectVerts setValue:@4 forKey:key];
-        }
-        else {
-            [geoobjectVerts setValue:@5 forKey:key];
+            overlayView.vertice = 0;
+        } else if (distance < 50) {
+            overlayView.vertice = 1;
+        } else if (distance < 100) {
+            overlayView.vertice = 2;
+        } else if (distance < 200) {
+            overlayView.vertice = 3;
+        } else if (distance < 300) {
+            overlayView.vertice = 4;
+        } else {
+            overlayView.vertice = 5;
         }
     }
 }
--(void)checkForVerticalPosClashes
-{
-    int distance, sub_distance, diff, x_pos, vertPosition, sub_vertPosition;
-    int overlay_width = ((ARObject*)[geoobjectOverlays allValues][0]).view.frame.size.width;
+
+-(void)checkForVerticalPosClashes {
     BOOL gotConflict = YES;
     
     while (gotConflict) {
         gotConflict = NO;
         
-        for (NSString *key in geoobjectOverlays.allKeys) {
-            
-            vertPosition = [geoobjectVerts[key] intValue];
-            distance = (int)([(ARObject*)geoobjectOverlays[key] distance].doubleValue);
-            x_pos = [geoobjectPositions[key] intValue];
-            
-            for (NSString *sub_key in geoobjectOverlays.allKeys) {
-                if ([sub_key intValue] == [key intValue]) continue;
+        for (AROverlayView *overlayView in self.overlayViews) {
+            for (AROverlayView *anotherOverlayView in self.overlayViews) {
                 
-                sub_vertPosition = [geoobjectVerts[sub_key] intValue];
-                if (vertPosition != sub_vertPosition) continue;
+                if (overlayView == anotherOverlayView) continue;
                 
-                diff = x_pos-[geoobjectPositions[sub_key] intValue];
-                sub_distance = [(ARObject*)geoobjectOverlays[sub_key] distance].intValue;
+                if (overlayView.vertice != anotherOverlayView.vertice) continue;
                 
-                if (diff < 0) diff = -diff;
-                if (diff > overlay_width) continue;
+                int diff = abs([self.locationMath getARObjectXPosition:overlayView] - [self.locationMath getARObjectXPosition:anotherOverlayView]);
+                
+                if (diff > overlayView.bounds.size.width) continue;
                 
                 gotConflict = YES;
                 
-                if (diff < overlay_width && sub_distance<distance) {
-                    vertPosition++;
-                    
-                } else if (diff < overlay_width) {
-                    [geoobjectVerts setValue:@(sub_vertPosition+1) forKey:sub_key];
+                if (diff < overlayView.bounds.size.width &&
+                    [anotherOverlayView distanceFromLocation:self.userCoordinate] < [overlayView distanceFromLocation:self.userCoordinate]) {
+                    overlayView.vertice++;
+                } else if (diff < overlayView.bounds.size.width) {
+                    anotherOverlayView.vertice++;
                 }
             }
-            
-            [geoobjectVerts setValue:@(vertPosition) forKey:key];
         }
     }
 }
--(void)checkAllVerticalPos
-{
-    NSNumber *vert;
-    while (![[geoobjectVerts allValues] containsObject:@0]) {
-        for (NSNumber *key in geoobjectVerts.allKeys) {
-            vert = geoobjectVerts[key];
-            geoobjectVerts[key] = @(vert.intValue-1);
+
+-(void)checkAllVerticalPos {
+    for (AROverlayView *overlayView in self.overlayViews) {
+        if (overlayView.vertice == 0) {
+            return;
         }
     }
+    for (AROverlayView *overlayView in self.overlayViews) {
+        overlayView.vertice--;
+    }
+    [self checkAllVerticalPos];
 }
--(void)setFramesForOverlays
-{
-    int x_pos, y_pos, vertPosition;
-    
-    ARObject *arObject = nil;
-    
-    for (NSNumber *ar_id in geoobjectOverlays.allKeys) {
-        arObject = geoobjectOverlays[ar_id];
+
+-(void)setFramesForOverlays {
+    for (AROverlayView *overlayView in self.overlayViews) {
         
-        x_pos = [geoobjectPositions[ar_id] intValue];
-        vertPosition = [geoobjectVerts[ar_id] intValue];
-        y_pos = [self setYPosForView:arObject.view atVerticalPos:vertPosition];
+        [overlayView setFrame:CGRectMake([self.locationMath getARObjectXPosition:overlayView],
+                                           [self setYPosForView:overlayView],
+                                           overlayView.bounds.size.width,
+                                           overlayView.bounds.size.height)];
         
-        // Subtract the half the width to the x_pos so it points to the right place with it's right tip
-        [arObject.view setFrame:CGRectMake(x_pos, y_pos,
-                                           arObject.view.frame.size.width,
-                                           arObject.view.frame.size.height)];
-        
-        [self warpView:arObject.view atVerticalPosition:vertPosition];
-        
-        [geoobjectOverlays setObject:arObject forKey:ar_id];
+        [self warpView:overlayView];
     }
 }
 
 
 #pragma mark - Main Initialization
 
--(void)initAndAllocContainers
-{
-    geoobjectOverlays = [[NSMutableDictionary alloc] init];
-    geoobjectPositions = [[NSMutableDictionary alloc] init];
-    geoobjectVerts = [[NSMutableDictionary alloc] init];
-}
-
-- (id)init
-{
+- (id)init {
     self = [super init];
     if (self) {
         self.locationMath = [[LocationMath alloc] init];
-        [self initAndAllocContainers];
     }
     return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     [self.locationMath stopTracking];
 }
 

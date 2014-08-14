@@ -11,6 +11,8 @@
 
 #import "PRARManager.h"
 
+#import "AROverlayView.h"
+
 #define NUMBER_OF_POINTS    20
 
 @interface ViewController() <PRARManagerDelegate>
@@ -58,9 +60,7 @@
     
     srand48(time(0));
     for (int i=0; i<NUMBER_OF_POINTS; i++) {
-        CLLocationCoordinate2D pointCoordinates = [self getRandomLocation];
-        NSDictionary *point = [self createPointWithId:i at:pointCoordinates];
-        [points addObject:point];
+        [points addObject:[self createPointAtLocation:[self getRandomLocation]]];
     }
     
     return [NSArray arrayWithArray:points];
@@ -80,15 +80,22 @@
 }
 
 // Creates the Data for an AR Object at a given location
--(NSDictionary*)createPointWithId:(int)the_id at:(CLLocationCoordinate2D)locCoordinates
+-(AROverlayView*)createPointAtLocation:(CLLocationCoordinate2D)locCoordinates
 {
-    NSDictionary *point = @{
-                            @"id" : @(the_id),
-                            @"title" : [NSString stringWithFormat:@"Place Num %d", the_id],
-                            @"lon" : @(locCoordinates.longitude),
-                            @"lat" : @(locCoordinates.latitude)
-                           };
-    return point;
+    static int i = 0;
+    
+    AROverlayView *overlay = [[AROverlayView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 100.0f, 100.0f)];
+    overlay.backgroundColor = [UIColor blueColor];
+
+    UILabel *label = [[UILabel alloc] initWithFrame:overlay.bounds];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.text = [@(i) stringValue];
+    i++;
+    [overlay addSubview:label];
+    
+    overlay.coordinates = locCoordinates;
+    
+    return overlay;
 }
 
 #pragma mark - PRARManager Delegate

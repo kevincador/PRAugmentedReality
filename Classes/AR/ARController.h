@@ -30,15 +30,14 @@
 @class LocationMath;
 
 @interface ARController : NSObject
-{
-    NSMutableDictionary *geoobjectOverlays;
-    NSMutableDictionary *geoobjectPositions;
-    NSMutableDictionary *geoobjectVerts;
-}
+
+@property (nonatomic) NSArray *overlayViews;
+@property (nonatomic) CLLocationCoordinate2D userCoordinate;
 
 @property (nonatomic, strong) LocationMath *locationMath;
 
--(NSDictionary*)buildAROverlaysForData:(NSArray*)arData andLocation:(CLLocationCoordinate2D)newLocation;
--(NSArray*)createRadarSpots;
+- (NSArray*)radarSpots;
+
+- (void)reloadData;
 
 @end

@@ -25,10 +25,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CoreMotion/CoreMotion.h>
+#import <CoreLocation/CoreLocation.h>
 
-#import "ARObject.h"
-
+@class AROverlayView;
 
 @interface LocationMath : NSObject <CLLocationManagerDelegate>
 {
@@ -54,6 +53,7 @@
 
 - (CGRect)getCurrentFramePosition;
 - (int)getCurrentHeading;
-- (int)getARObjectXPosition:(ARObject*)arObject;
+
+- (int)getARObjectXPosition:(AROverlayView*)arObject;
 
 @end

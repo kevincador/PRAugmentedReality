@@ -33,6 +33,7 @@
 
 
 @protocol PRARManagerDelegate;
+@protocol PRARManagerDatasource;
 
 
 @interface PRARManager : NSObject
@@ -42,6 +43,7 @@
 @property (nonatomic) UIView *arOverlaysContainerView;
 
 @property (weak, nonatomic) id<PRARManagerDelegate> delegate;
+@property (weak, nonatomic) id<PRARManagerDatasource> datasource;
 
 - (id)initWithSize:(CGSize)size
           delegate:(id<PRARManagerDelegate>)delegate
@@ -58,5 +60,13 @@
 - (void)augmentedRealityManagerDidSetup:(PRARManager*)arManager;
 - (void)augmentedRealityManager:(PRARManager*)arManager didUpdateARFrame:(CGRect)frame;
 - (void)augmentedRealityManager:(PRARManager*)arManager didReportError:(NSError*)error;
+
+@end
+
+@protocol PRARManagerDatasource <NSObject>
+
+- (void)augmentedRealityManager:(PRARManager*)arManager userLocation:(CLLocationCoordinate2D)location;
+- (void)augmentedRealityManager:(PRARManager*)arManager data:(NSArray*)data;
+- (void)augmentedRealityManager:(PRARManager*)arManager viewForIndexPath:(NSIndexPath*)indexPath;
 
 @end

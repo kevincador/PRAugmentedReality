@@ -29,7 +29,6 @@
 #import <QuartzCore/CALayer.h>
 #import <QuartzCore/CATransform3D.h>
 
-#import "ARObject.h"
 #import "LocationMath.h"
 
 #import <AVFoundation/AVFoundation.h>
@@ -128,23 +127,21 @@ static NSString *const PRARMANAGER_ERROR_DOMAIN = @"PRARMANAGER_ERROR_DOMAIN";
 
 #pragma mark - AR Setup
 
-- (void)setupAROverlaysWithData:(NSDictionary*)arObjectsDict {
+- (void)reloadData {
     [[self.arOverlaysContainerView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
-    for (NSNumber *ar_id in arObjectsDict.allKeys) {
-        [self.arOverlaysContainerView addSubview:[arObjectsDict[ar_id] view]];
+    for (UIView *overlay in self.arController.overlayViews) {
+        [self.arOverlaysContainerView addSubview:overlay];
     }
 }
 
 - (void)setupRadar {
     if (self.shouldCreateRadarView) {
-        NSArray *spots = [self.arController createRadarSpots];
-        
         self.radarView = [[ARRadar alloc] initWithFrame:CGRectMake((self.arViewSize.width/2)-50,
                                                                    self.arViewSize.height-100,
                                                                    100,
                                                                    100)
-                                              withSpots:spots];
+                                              withSpots:[self.arController radarSpots]];
     }
 }
 
@@ -187,9 +184,12 @@ static NSString *const PRARMANAGER_ERROR_DOMAIN = @"PRARMANAGER_ERROR_DOMAIN";
     
     [self.arController.locationMath startTrackingWithLocation:location
                                                       andSize:self.arViewSize];
-    NSDictionary *arObjectsDict = [self.arController buildAROverlaysForData:arData
-                                                                andLocation:location];
-    [self setupAROverlaysWithData:arObjectsDict];
+    
+    self.arController.overlayViews = arData;
+    self.arController.userCoordinate = location;
+    [self.arController reloadData];
+    [self reloadData];
+    
     if (self.shouldCreateRadarView) {
         [self setupRadar];
     }
