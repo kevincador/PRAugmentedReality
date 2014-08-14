@@ -86,16 +86,25 @@
     
     AROverlayView *overlay = [[AROverlayView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 100.0f, 100.0f)];
     overlay.backgroundColor = [UIColor blueColor];
+    overlay.coordinates = locCoordinates;
 
     UILabel *label = [[UILabel alloc] initWithFrame:overlay.bounds];
     label.textAlignment = NSTextAlignmentCenter;
     label.text = [@(i) stringValue];
-    i++;
     [overlay addSubview:label];
     
-    overlay.coordinates = locCoordinates;
+    UIButton *button = [[UIButton alloc] initWithFrame:overlay.bounds];
+    [button addTarget:self action:@selector(overlayTouchedUpInside:) forControlEvents:UIControlEventTouchUpInside];
+    button.tag = i;
+    [overlay addSubview:button];
+    
+    i++;
     
     return overlay;
+}
+
+- (void)overlayTouchedUpInside:(UIButton*)button {
+    NSLog(@"Button %i pressed", button.tag);
 }
 
 #pragma mark - PRARManager Delegate
